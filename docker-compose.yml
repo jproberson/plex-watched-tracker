@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  plex-watched-shows:
+    build: .
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - PLEX_SERVER_IP=${PLEX_SERVER_IP}
+      - PLEX_SERVER_PORT=${PLEX_SERVER_PORT}
+      - PLEX_TOKEN=${PLEX_TOKEN}
+      - PORT=${PORT:-3000}
