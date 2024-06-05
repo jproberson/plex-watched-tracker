@@ -62,6 +62,7 @@ h1 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     text-align: center;
+    position: relative;
     transition: transform 0.3s ease;
 }
 
@@ -80,6 +81,21 @@ h1 {
 .thumbnail {
     width: 100%;
     height: auto;
+    position: relative;
+}
+
+.thumbnail-container {
+    position: relative;
+}
+
+.rank-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: yellow;
+    font-size: 1.5em;
+    font-weight: bold;
+    z-index: 1;
 }
 
 .show p {
@@ -87,6 +103,22 @@ h1 {
     margin: 0;
     font-size: 1em;
     color: #b0b0b0;
+}
+
+#toggle-drag {
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 1em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#toggle-drag:hover {
+    background-color: #45a049;
 }
 
 /* Media Queries */
@@ -116,11 +148,12 @@ h1 {
         font-size: 0.9em;
     }
 
-    .show:hover {
-        transform: none;
+    .rank-badge {
+        font-size: 1.2em;
     }
 }
 
+/* Remove hover effect on touch devices */
 @media (hover: none) {
     .show:hover {
         transform: none;

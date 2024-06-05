@@ -1,38 +1,48 @@
-const express = require('express');
-const axios = require('axios');
+const express = require("express");
+const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
+require("dotenv").config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
-const PLEX_SERVER_IP = process.env.PLEX_SERVER_IP;
-const PLEX_SERVER_PORT = process.env.PLEX_SERVER_PORT;
-const PLEX_TOKEN = process.env.PLEX_TOKEN;
+const PLEX_SERVER_IP = process.env.PLEX_SERVER_IP || "192.168.0.180";
+const PLEX_SERVER_PORT = process.env.PLEX_SERVER_PORT || 32400;
+const PLEX_TOKEN = process.env.PLEX_TOKEN || "L_JC9WjTCoEcm4ZvbVCf&";
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "admin_secret_token";
 
-console.log("Starting server...");
-console.log(`PLEX_SERVER_IP: ${PLEX_SERVER_IP}`);
-console.log(`PLEX_SERVER_PORT: ${PLEX_SERVER_PORT}`);
-console.log(`PLEX_TOKEN: ${PLEX_TOKEN}`);
-console.log(`PORT: ${port}`);
+const orderFilePath = path.join(__dirname, "order.json");
 
-app.set('view engine', 'ejs');
-app.use(express.static('public'));
+app.set("view engine", "ejs");
+app.use(express.static("public"));
+app.use(express.json());
 
-// Proxy endpoint to serve images
-app.get('/images/*', async (req, res) => {
+function loadOrder() {
+  if (fs.existsSync(orderFilePath)) {
+    const orderData = fs.readFileSync(orderFilePath);
+    return JSON.parse(orderData);
+  }
+  return [];
+}
+
+function saveOrder(order) {
+  fs.writeFileSync(orderFilePath, JSON.stringify(order, null, 2));
+}
+
+app.get("/images/*", async (req, res) => {
   try {
     const imagePath = req.params[0];
     const imageUrl = `http://${PLEX_SERVER_IP}:${PLEX_SERVER_PORT}/${imagePath}?X-Plex-Token=${PLEX_TOKEN}`;
-    console.log(`Fetching image from URL: ${imageUrl}`);
-
-    const imageResponse = await axios.get(imageUrl, { responseType: 'stream' });
+    const imageResponse = await axios.get(imageUrl, { responseType: "stream" });
     imageResponse.data.pipe(res);
   } catch (error) {
-    console.error('Error fetching image:', error.message);
-    res.status(500).send('Error fetching image');
+    console.error("Error fetching image:", error.message);
+    res.status(500).send("Error fetching image");
   }
 });
 
-app.get('/', async (req, res) => {
+app.get("/", async (req, res) => {
   try {
     const sectionsUrl = `http://${PLEX_SERVER_IP}:${PLEX_SERVER_PORT}/library/sections?X-Plex-Token=${PLEX_TOKEN}`;
     const sectionsResponse = await axios.get(sectionsUrl);
@@ -43,7 +53,7 @@ app.get('/', async (req, res) => {
 
     const sections = sectionsResponse.data;
     const showSections = sections.MediaContainer.Directory.filter(
-      (dir) => dir.type === 'show'
+      (dir) => dir.type === "show"
     );
 
     let watchedShows = [];
@@ -52,6 +62,10 @@ app.get('/', async (req, res) => {
 
     for (const section of showSections) {
       const sectionKey = section.key;
+      if (!sectionKey) {
+        console.warn("Section key is missing for section:", section);
+        continue;
+      }
       const sectionUrl = `http://${PLEX_SERVER_IP}:${PLEX_SERVER_PORT}/library/sections/${sectionKey}/all?X-Plex-Token=${PLEX_TOKEN}`;
       const sectionResponse = await axios.get(sectionUrl);
 
@@ -63,10 +77,16 @@ app.get('/', async (req, res) => {
 
       const sectionData = sectionResponse.data;
 
-      for (const show of sectionData.MediaContainer.Metadata) {
+      for (const show of sectionData.MediaContainer.Metadata || []) {
         const showTitle = show.title;
         const showKey = show.key;
         const showThumb = show.thumb;
+
+        if (!showTitle || !showKey || !showThumb) {
+          console.warn("Show data is incomplete for show:", show);
+          continue;
+        }
+
         const showUrl = `http://${PLEX_SERVER_IP}:${PLEX_SERVER_PORT}${showKey}?X-Plex-Token=${PLEX_TOKEN}`;
         const showResponse = await axios.get(showUrl);
 
@@ -75,7 +95,6 @@ app.get('/', async (req, res) => {
         }
 
         const showData = showResponse.data;
-
         let allEpisodesWatched = true;
 
         const seasons = Array.isArray(showData.MediaContainer.Metadata)
@@ -83,7 +102,16 @@ app.get('/', async (req, res) => {
           : [showData.MediaContainer.Metadata];
 
         for (const season of seasons) {
+          if (!season) {
+            console.warn("Season data is missing for show:", showTitle);
+            continue;
+          }
           const seasonKey = season.key;
+          if (!seasonKey) {
+            console.warn("Season key is missing for season:", season);
+            continue;
+          }
+
           const seasonUrl = `http://${PLEX_SERVER_IP}:${PLEX_SERVER_PORT}${seasonKey}?X-Plex-Token=${PLEX_TOKEN}`;
           const seasonResponse = await axios.get(seasonUrl);
 
@@ -100,6 +128,10 @@ app.get('/', async (req, res) => {
             : [seasonData.MediaContainer.Metadata];
 
           for (const episode of episodes) {
+            if (!episode) {
+              console.warn("Episode data is missing for season:", seasonKey);
+              continue;
+            }
             if (!episode.viewCount || parseInt(episode.viewCount) === 0) {
               allEpisodesWatched = false;
               break;
@@ -129,21 +161,47 @@ app.get('/', async (req, res) => {
             thumb: `/images${showThumb}`,
             genres,
             countries,
+            key: showKey,
           });
         }
       }
     }
 
-    res.render('index', {
+    const order = loadOrder();
+    if (!Array.isArray(order)) {
+      throw new Error("Order data is not an array");
+    }
+
+    watchedShows.sort((a, b) => {
+      const aIndex = order.indexOf(a.title);
+      const bIndex = order.indexOf(b.title);
+      return (
+        (aIndex !== -1 ? aIndex : Number.MAX_SAFE_INTEGER) -
+        (bIndex !== -1 ? bIndex : Number.MAX_SAFE_INTEGER)
+      );
+    });
+
+    res.render("index", {
       watchedShows,
-      PLEX_TOKEN, // Add this line
+      PLEX_TOKEN,
       genres: Array.from(genresSet),
       countries: Array.from(countriesSet),
+      ADMIN_TOKEN,
     });
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error("Error:", error.message);
     res.status(500).send(`Error: ${error.message}`);
   }
+});
+
+app.post("/save-order", (req, res) => {
+  const { order, token } = req.body;
+  if (token !== ADMIN_TOKEN) {
+    return res.status(403).send("Forbidden");
+  }
+
+  saveOrder(order);
+  res.send("Order saved");
 });
 
 app.listen(port, () => {
