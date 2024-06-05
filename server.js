@@ -2,7 +2,7 @@ const express = require("express");
 const axios = require("axios");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = 3000;
 
 const PLEX_SERVER_IP = process.env.PLEX_SERVER_IP || "192.168.0.180";
 const PLEX_SERVER_PORT = process.env.PLEX_SERVER_PORT || "32400";
@@ -127,5 +127,5 @@ app.get("/", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running at http://localhost:${3000}`);
 });
