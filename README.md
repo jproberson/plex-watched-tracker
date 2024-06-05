@@ -7,12 +7,12 @@ docker-compose up --build -d
 OR
 
 ```
-docker build -t plex-watched-shows .
+docker build -t plex-watched-tracker .
 
-docker run -d -p 3000:3000 \
+docker run -d -p 42069:3000 \
     -e PLEX_SERVER_IP=192.168.0.180 \
     -e PLEX_SERVER_PORT=32400 \
-    -e PORT=3000 \
-    -e PLEX_TOKEN="" \
-    plex-watched-shows
+    -e PLEX_TOKEN="L_JC9WjTCoEcm4ZvbVCf&" \
+    plex-watched-tracker
+
 ```
