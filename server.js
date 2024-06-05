@@ -2,14 +2,36 @@ const express = require("express");
 const axios = require("axios");
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-const PLEX_SERVER_IP = process.env.PLEX_SERVER_IP || "192.168.0.180";
-const PLEX_SERVER_PORT = process.env.PLEX_SERVER_PORT || "32400";
+const PLEX_SERVER_IP = process.env.PLEX_SERVER_IP;
+const PLEX_SERVER_PORT = process.env.PLEX_SERVER_PORT;
 const PLEX_TOKEN = process.env.PLEX_TOKEN;
+
+console.log("Starting server...");
+console.log(`PLEX_SERVER_IP: ${PLEX_SERVER_IP}`);
+console.log(`PLEX_SERVER_PORT: ${PLEX_SERVER_PORT}`);
+console.log(`PLEX_TOKEN: ${PLEX_TOKEN}`);
+console.log(`PORT: ${port}`);
 
 app.set("view engine", "ejs");
 app.use(express.static("public"));
+
+// Proxy endpoint to serve images
+app.get("/images/:path", async (req, res) => {
+  try {
+    const imagePath = req.params.path;
+    const encodedImagePath = encodeURIComponent(imagePath);
+    const imageUrl = `http://${PLEX_SERVER_IP}:${PLEX_SERVER_PORT}/${encodedImagePath}?X-Plex-Token=${PLEX_TOKEN}`;
+    console.log(`Fetching image from URL: ${imageUrl}`);
+
+    const imageResponse = await axios.get(imageUrl, { responseType: "stream" });
+    imageResponse.data.pipe(res);
+  } catch (error) {
+    console.error("Error fetching image:", error.message);
+    res.status(500).send("Error fetching image");
+  }
+});
 
 app.get("/", async (req, res) => {
   try {
@@ -105,7 +127,7 @@ app.get("/", async (req, res) => {
           }
           watchedShows.push({
             title: showTitle,
-            thumb: showThumb,
+            thumb: `/images/${encodeURIComponent(showThumb)}`,
             genres,
             countries,
           });
@@ -122,10 +144,11 @@ app.get("/", async (req, res) => {
       countries: Array.from(countriesSet),
     });
   } catch (error) {
+    console.error("Error:", error.message);
     res.status(500).send(`Error: ${error.message}`);
   }
 });
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${3000}`);
+  console.log(`Server running at http://localhost:${port}`);
 });
