@@ -1,5 +1,5 @@
-const express = require("express");
-const axios = require("axios");
+const express = require('express');
+const axios = require('axios');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -14,26 +14,25 @@ console.log(`PLEX_SERVER_PORT: ${PLEX_SERVER_PORT}`);
 console.log(`PLEX_TOKEN: ${PLEX_TOKEN}`);
 console.log(`PORT: ${port}`);
 
-app.set("view engine", "ejs");
-app.use(express.static("public"));
+app.set('view engine', 'ejs');
+app.use(express.static('public'));
 
 // Proxy endpoint to serve images
-app.get("/images/:path", async (req, res) => {
+app.get('/images/*', async (req, res) => {
   try {
-    const imagePath = req.params.path;
-    const encodedImagePath = encodeURIComponent(imagePath);
-    const imageUrl = `http://${PLEX_SERVER_IP}:${PLEX_SERVER_PORT}/${encodedImagePath}?X-Plex-Token=${PLEX_TOKEN}`;
+    const imagePath = req.params[0];
+    const imageUrl = `http://${PLEX_SERVER_IP}:${PLEX_SERVER_PORT}/${imagePath}?X-Plex-Token=${PLEX_TOKEN}`;
     console.log(`Fetching image from URL: ${imageUrl}`);
 
-    const imageResponse = await axios.get(imageUrl, { responseType: "stream" });
+    const imageResponse = await axios.get(imageUrl, { responseType: 'stream' });
     imageResponse.data.pipe(res);
   } catch (error) {
-    console.error("Error fetching image:", error.message);
-    res.status(500).send("Error fetching image");
+    console.error('Error fetching image:', error.message);
+    res.status(500).send('Error fetching image');
   }
 });
 
-app.get("/", async (req, res) => {
+app.get('/', async (req, res) => {
   try {
     const sectionsUrl = `http://${PLEX_SERVER_IP}:${PLEX_SERVER_PORT}/library/sections?X-Plex-Token=${PLEX_TOKEN}`;
     const sectionsResponse = await axios.get(sectionsUrl);
@@ -44,7 +43,7 @@ app.get("/", async (req, res) => {
 
     const sections = sectionsResponse.data;
     const showSections = sections.MediaContainer.Directory.filter(
-      (dir) => dir.type === "show"
+      (dir) => dir.type === 'show'
     );
 
     let watchedShows = [];
@@ -127,7 +126,7 @@ app.get("/", async (req, res) => {
           }
           watchedShows.push({
             title: showTitle,
-            thumb: `/images/${encodeURIComponent(showThumb)}`,
+            thumb: `/images${showThumb}`,
             genres,
             countries,
           });
@@ -135,16 +134,14 @@ app.get("/", async (req, res) => {
       }
     }
 
-    res.render("index", {
+    res.render('index', {
       watchedShows,
-      PLEX_SERVER_IP,
-      PLEX_SERVER_PORT,
-      PLEX_TOKEN,
+      PLEX_TOKEN, // Add this line
       genres: Array.from(genresSet),
       countries: Array.from(countriesSet),
     });
   } catch (error) {
-    console.error("Error:", error.message);
+    console.error('Error:', error.message);
     res.status(500).send(`Error: ${error.message}`);
   }
 });

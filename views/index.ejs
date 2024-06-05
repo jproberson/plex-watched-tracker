@@ -1,40 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Plex Watched Shows</title>
-    <link rel="stylesheet" href="/styles.css" />
-  </head>
-  <body>
-    <div class="header">
-      <h1>Plex Watched Shows</h1>
-      <input type="text" id="search" placeholder="Search for shows..." />
-      <select id="genre-filter">
-        <option value="">All Genres</option>
-        <% genres.forEach(genre => { %>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watched TV Shows</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Watched TV Shows</h1>
+  </header>
+  <div class="filters">
+    <input type="text" id="search-bar" onkeyup="filterShows()" placeholder="Search for shows...">
+    <select id="genre-filter" onchange="filterShows()">
+      <option value="All">All Genres</option>
+      <% genres.forEach(genre => { %>
         <option value="<%= genre %>"><%= genre %></option>
-        <% }) %>
-      </select>
-      <select id="country-filter">
-        <option value="">All Countries</option>
-        <% countries.forEach(country => { %>
+      <% }); %>
+    </select>
+    <select id="country-filter" onchange="filterShows()">
+      <option value="All">All Countries</option>
+      <% countries.forEach(country => { %>
         <option value="<%= country %>"><%= country %></option>
-        <% }) %>
-      </select>
-    </div>
-    <div class="show-container" id="show-container">
+      <% }); %>
+    </select>
+  </div>
+  <div class="shows-container">
+    <% if (watchedShows.length > 0) { %>
       <% watchedShows.forEach(show => { %>
-      <div class="show-card">
-        <img
-          class="thumbnail"
-          src="<%= show.thumb %>?X-Plex-Token=<%= PLEX_TOKEN %>"
-          alt="<%= show.title %>"
-        />
-        <h2><%= show.title %></h2>
-      </div>
-      <% }) %>
-    </div>
-    <script src="/main.js"></script>
-  </body>
+        <div class="show" data-genres="<%= show.genres.join(',') %>" data-countries="<%= show.countries.join(',') %>">
+          <h2><%= show.title %></h2>
+          <img class="thumbnail" src="<%= show.thumb %>?X-Plex-Token=<%= PLEX_TOKEN %>" alt="<%= show.title %>">
+          <p>Genres: <%= show.genres.join(', ') %></p>
+          <p>Country: <%= show.countries.join(', ') %></p>
+        </div>
+      <% }); %>
+    <% } else { %>
+      <p>No watched shows found.</p>
+    <% } %>
+  </div>
+  <script src="/main.js"></script>
+</body>
 </html>
