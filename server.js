@@ -13,10 +13,18 @@ const PLEX_TOKEN = process.env.PLEX_TOKEN || "L_JC9WjTCoEcm4ZvbVCf&";
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "admin_secret_token";
 
 const orderFilePath = path.join(__dirname, "order.json");
+const showsFilePath = path.join(__dirname, "manual-watched-list", "shows.json");
+console.log("showsFilePath:", showsFilePath);
 
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 app.use(express.json());
+
+// Serve the images from the local directory
+app.use(
+  "/thumbnails",
+  express.static(path.join(__dirname, "manual-watched-list/thumbnails"))
+);
 
 function loadOrder() {
   if (fs.existsSync(orderFilePath)) {
@@ -28,6 +36,15 @@ function loadOrder() {
 
 function saveOrder(order) {
   fs.writeFileSync(orderFilePath, JSON.stringify(order, null, 2));
+}
+
+// Load the shows from the JSON file
+function loadShows() {
+  if (fs.existsSync(showsFilePath)) {
+    const showsData = fs.readFileSync(showsFilePath);
+    return JSON.parse(showsData);
+  }
+  return [];
 }
 
 app.get("/images/*", async (req, res) => {
@@ -166,6 +183,20 @@ app.get("/", async (req, res) => {
         }
       }
     }
+
+    // Load additional shows from the local JSON file
+    const additionalShows = loadShows();
+    additionalShows.forEach((show) => {
+      genresSet.add(...show.genre);
+      countriesSet.add(show.country);
+      watchedShows.push({
+        title: show.title,
+        thumb: show.thumbnail,
+        genres: show.genre,
+        countries: [show.country],
+        key: show.title,
+      });
+    });
 
     const order = loadOrder();
     if (!Array.isArray(order)) {

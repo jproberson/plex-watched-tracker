@@ -50,7 +50,7 @@ toggleDragButton.addEventListener("click", () => {
 async function saveOrder() {
   const order = [];
   document.querySelectorAll(".show").forEach((show) => {
-    order.push(show.getAttribute("data-title")); // Use data-title attribute to get the show title
+    order.push(show.getAttribute("data-id")); // Use data-id attribute to get the show key
   });
 
   try {

@@ -38,7 +38,7 @@
         class="show"
         id="show-<%= index %>"
         data-id="show-<%= index %>"
-        data-title="<%= show.title %>"  // Add data-title attribute for title
+        data-title="<%= show.title %>"
         data-genres="<%= show.genres.join(',') %>"
         data-countries="<%= show.countries.join(',') %>"
       >
@@ -46,7 +46,7 @@
           <span class="rank-badge"><%= index + 1 %></span>
           <img
             class="thumbnail"
-            src="<%= show.thumb %>?X-Plex-Token=<%= PLEX_TOKEN %>"
+            src="<%= show.thumb.startsWith('http') ? show.thumb : '/' + show.thumb %>?X-Plex-Token=<%= PLEX_TOKEN %>"
             alt="<%= show.title %>"
           />
         </div>
