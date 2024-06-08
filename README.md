@@ -18,7 +18,6 @@ This project tracks watched TV shows from your Plex server and a manual list. It
 Create a .env file in the root of your project with the following variables:
 
 ```makefile
-Copy code
 PLEX_SERVER_IP=your_plex_server_ip
 PLEX_SERVER_PORT=32400
 PLEX_TOKEN=your_plex_token
@@ -30,7 +29,6 @@ If you want to include a manual list of shows, create a directory called manual-
 
 - shows.json: A JSON file containing your manual list of shows in the following format:
 ```json
-Copy code
 [
   {
     "title": "Show Title",
@@ -38,7 +36,6 @@ Copy code
     "country": "Country",
     "thumbnail": "thumbnails/show_thumbnail.jpg"
   },
-  ...
 ]
 ```
 
