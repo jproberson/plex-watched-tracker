@@ -1,0 +1,14 @@
+services:
+  plex-watched-tracker:
+    build: .
+    container_name: plex-watched-tracker
+    environment:
+      - PLEX_SERVER_IP=${PLEX_SERVER_IP}
+      - PLEX_SERVER_PORT=${PLEX_SERVER_PORT}
+      - PLEX_TOKEN=${PLEX_TOKEN}
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - PORT=${PORT}
+    volumes:
+      - ${CONFIG_DIR}:/usr/src/app/config
+    ports:
+      - "42069:3000"

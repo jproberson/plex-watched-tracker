@@ -21,6 +21,14 @@ function filterShows() {
   }
 }
 
+function updateRankBadges() {
+  const shows = document.querySelectorAll(".show");
+  shows.forEach((show, index) => {
+    const rankBadge = show.querySelector(".rank-badge");
+    rankBadge.textContent = `#${index + 1}`;
+  });
+}
+
 let sortable;
 let adminToken = null;
 const toggleDragButton = document.getElementById("toggle-drag");
@@ -34,8 +42,9 @@ toggleDragButton.addEventListener("click", () => {
     if (!sortable) {
       sortable = new Sortable(document.getElementById("show-container"), {
         animation: 150,
-        onEnd: function () {
+        onEnd: function() {
           saveOrder();
+          updateRankBadges();
         },
       });
       toggleDragButton.innerText = "Disable Edit Mode";
@@ -50,7 +59,7 @@ toggleDragButton.addEventListener("click", () => {
 async function saveOrder() {
   const order = [];
   document.querySelectorAll(".show").forEach((show) => {
-    order.push(show.getAttribute("data-id")); // Use data-id attribute to get the show key
+    order.push(show.getAttribute("data-title")); // Use data-title attribute to get the show title
   });
 
   try {

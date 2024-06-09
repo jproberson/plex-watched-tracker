@@ -1,58 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Watched TV Shows</title>
-    <link rel="stylesheet" href="/styles.css" />
-    <script src="/vendor/sortablejs/Sortable.min.js"></script>
-  </head>
-  <body>
-    <header>
-      <h1>Watched TV Shows</h1>
-    </header>
-    <div class="filters">
-      <input
-        type="text"
-        id="search-bar"
-        onkeyup="filterShows()"
-        placeholder="Search for shows..."
-      />
-      <select id="genre-filter" onchange="filterShows()">
-        <option value="All">All Genres</option>
-        <% genres.forEach(function(genre) { %>
-        <option value="<%= genre %>"><%= genre %></option>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Watched TV Shows</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="/vendor/sortablejs/Sortable.min.js"></script>
+</head>
+
+<body>
+  <header>
+    <h1>Watched TV Shows</h1>
+  </header>
+  <div class="filters">
+    <input type="text" id="search-bar" onkeyup="filterShows()" placeholder="Search for shows..." />
+    <select id="genre-filter" onchange="filterShows()">
+      <option value="All">All Genres</option>
+      <% genres.forEach(function(genre) { %>
+        <option value="<%= genre %>">
+          <%= genre %>
+        </option>
         <% }); %>
-      </select>
-      <select id="country-filter" onchange="filterShows()">
-        <option value="All">All Countries</option>
-        <% countries.forEach(function(country) { %>
-        <option value="<%= country %>"><%= country %></option>
+    </select>
+    <select id="country-filter" onchange="filterShows()">
+      <option value="All">All Countries</option>
+      <% countries.forEach(function(country) { %>
+        <option value="<%= country %>">
+          <%= country %>
+        </option>
         <% }); %>
-      </select>
-    </div>
-    <div id="show-container" class="shows-container">
-      <% if (watchedShows.length > 0) { %>
+    </select>
+  </div>
+  <div id="show-container" class="shows-container">
+    <% if (watchedShows.length> 0) { %>
       <% watchedShows.forEach(function(show, index) { %>
-      <div
-        class="show"
-        id="show-<%= index %>"
-        data-id="show-<%= index %>"
-        data-title="<%= show.title %>"
-        data-genres="<%= show.genres.join(',') %>"
-        data-countries="<%= show.countries.join(',') %>"
-      >
-        <div class="thumbnail-container">
-          <span class="rank-badge"><%= index + 1 %></span>
-          <img
-            class="thumbnail"
-            src="<%= show.thumb.startsWith('http') ? show.thumb : '/' + show.thumb %>?X-Plex-Token=<%= PLEX_TOKEN %>"
-            alt="<%= show.title %>"
-          />
-        </div>
-        <h2><%= show.title %></h2>
-        <p>Genres: <%= show.genres.join(', ') %></p>
-        <p>Country: <%= show.countries.join(', ') %></p>
+        <div class="show" id="show-<%= index %>" data-id="show-<%= index %>" data-title="<%= show.title %>"
+          data-genres="<%= show.genres.join(',') %>" data-countries="<%= show.countries.join(',') %>">
+          <div class="thumbnail-container">
+            <span class="rank-badge">
+              <%= index + 1 %>
+            </span>
+            <img class="thumbnail" src="<%= show.thumb.startsWith('/thumbnails/') ? show.thumb : '/' + show.thumb %>"
+              alt="<%= show.title %>" />
+          </div>
+          <h2>
+            <%= show.title %>
+          </h2>
+          <p>Genres: <%= show.genres.join(', ') %></p>
+        <p>Country: <%= show.countries.join(' , ') %></p>
       </div>
       <% }); %>
       <% } else { %>
