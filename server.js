@@ -20,7 +20,6 @@ app.set("view engine", "ejs");
 app.use(express.static("public"));
 app.use(express.json());
 
-// Serve the images from the local directory
 app.use(
   "/thumbnails",
   express.static(path.join(configDir, "thumbnails"))
@@ -38,7 +37,6 @@ function saveOrder(order) {
   fs.writeFileSync(orderFilePath, JSON.stringify(order, null, 2));
 }
 
-// Load the shows from the JSON file
 function loadShows() {
   if (fs.existsSync(showsFilePath)) {
     const showsData = fs.readFileSync(showsFilePath);
@@ -47,7 +45,6 @@ function loadShows() {
   return [];
 }
 
-// Fetch Plex shows
 async function fetchPlexShows() {
   const sectionsUrl = `http://${PLEX_SERVER_IP}:${PLEX_SERVER_PORT}/library/sections?X-Plex-Token=${PLEX_TOKEN}`;
   const sectionsResponse = await axios.get(sectionsUrl);
@@ -189,14 +186,12 @@ app.get("/images/*", async (req, res) => {
 
 app.get("/", async (req, res) => {
   try {
-    // Fetch Plex shows
     const {
       watchedShows: plexWatchedShows,
       genresSet: plexGenresSet,
       countriesSet: plexCountriesSet,
     } = await fetchPlexShows();
 
-    // Load additional shows from the local JSON file
     const additionalShows = loadShows();
     additionalShows.forEach((show) => {
       show.genre.forEach((genre) => plexGenresSet.add(genre));
