@@ -34,7 +34,7 @@ If you want to include a manual list of shows, create a directory called manual-
     "title": "Show Title",
     "genre": ["Genre1", "Genre2"],
     "country": "Country",
-    "thumbnail": "thumbnails/show_thumbnail.jpg"
+    "thumbnail": "show_thumbnail.jpg"
   },
 ]
 ```
@@ -64,14 +64,13 @@ docker run -d --name plex-watched-tracker -p 42069:3000 \
     -e PLEX_SERVER_PORT=32400 \
     -e PLEX_TOKEN=your_plex_token \
     -e ADMIN_TOKEN=your_admin_token \
-    -v /path/to/manual-watched-list:/usr/src/app/manual-watched-list \
+    -v /path/to/config:/usr/src/app/config \
     plex-watched-tracker
 ```
 ## Docker Compose
 If you prefer to use Docker Compose, create a docker-compose.yml file in your project root with the following content:
 
 ```yaml
-version: '3'
 services:
   plex-watched-tracker:
     build: .
@@ -83,7 +82,7 @@ services:
       - ADMIN_TOKEN=${ADMIN_TOKEN}
       - PORT=${PORT}
     volumes:
-      - /path/to/manual-watched-list:/usr/src/app/manual-watched-list
+      - $/path/to/config_dir:/usr/src/app/config
     ports:
       - "42069:3000"
 ```
