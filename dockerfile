@@ -10,8 +10,8 @@ RUN npm install
 
 COPY . .
 
-ENV PORT 3000
+COPY .env ./
 
 EXPOSE $PORT
 
-CMD [ "node", "server.js" ]
+CMD ["node", "server.js"]
