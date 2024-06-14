@@ -1,4 +1,4 @@
-FROM node:16
+FROM node:22
 
 RUN apt-get update && apt-get install -y bash
 
@@ -10,8 +10,8 @@ RUN npm install
 
 COPY . .
 
-ENV PORT 3000
+COPY .env ./
 
 EXPOSE $PORT
 
-CMD [ "node", "server.js" ]
+CMD ["node", "server.js"]
