@@ -1,4 +1,4 @@
-
+const axios = require('axios');
 const express = require("express");
 const {
   fetchPlexShows,
@@ -6,7 +6,7 @@ const {
   saveOrder,
   loadShows,
 } = require("../controllers/plexController");
-const { plexToken, adminToken } = require("../config");
+const { plexServerIp, plexServerPort, plexToken, adminToken } = require("../server-config");
 const path = require("path");
 
 const router = express.Router();
@@ -14,7 +14,7 @@ const router = express.Router();
 router.get("/images/*", async (req, res) => {
   try {
     const imagePath = req.params[0];
-    const imageUrl = `http://${PLEX_SERVER_IP}:${PLEX_SERVER_PORT}/${imagePath}?X-Plex-Token=${plexToken}`;
+    const imageUrl = `http://${plexServerIp}:${plexServerPort}/${imagePath}?X-Plex-Token=${plexToken}`;
     const imageResponse = await axios.get(imageUrl, { responseType: "stream" });
     imageResponse.data.pipe(res);
   } catch (error) {

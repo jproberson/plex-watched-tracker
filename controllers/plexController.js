@@ -1,7 +1,7 @@
 
 const axios = require("axios");
 const path = require("path");
-const { plexServerIp, plexServerPort, plexToken, configDir } = require("../config");
+const { plexServerIp, plexServerPort, plexToken, configDir } = require("../server-config");
 const { loadFile, saveFile } = require("../utils/fileUtils");
 
 const orderFilePath = path.join(configDir, "order.json");
