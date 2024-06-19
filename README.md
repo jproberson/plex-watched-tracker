@@ -64,7 +64,7 @@ docker run -d --name plex-watched-tracker -p 42069:3000 \
     -e PLEX_SERVER_PORT=32400 \
     -e PLEX_TOKEN=your_plex_token \
     -e ADMIN_TOKEN=your_admin_token \
-    -v /path/to/config:/usr/src/app/config \
+    -v /path/to/data:/usr/src/app/data \
     plex-watched-tracker
 ```
 ## Docker Compose
@@ -82,7 +82,7 @@ services:
       - ADMIN_TOKEN=${ADMIN_TOKEN}
       - PORT=${PORT}
     volumes:
-      - $/path/to/config_dir:/usr/src/app/config
+      - $/path/to/data_dir:/usr/src/app/data
     ports:
       - "42069:3000"
 ```

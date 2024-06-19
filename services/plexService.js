@@ -4,12 +4,12 @@ const {
   plexServerIp,
   plexServerPort,
   plexToken,
-  configDir,
+  dataDir,
 } = require('../server-config');
 const { loadFile, saveFile } = require('../utils/fileUtils');
 
-const orderFilePath = path.join(configDir, 'order.json');
-const showsFilePath = path.join(configDir, 'shows.json');
+const orderFilePath = path.join(dataDir, 'order.json');
+const showsFilePath = path.join(dataDir, 'shows.json');
 
 async function fetchPlexShows() {
   const sectionsUrl = `http://${plexServerIp}:${plexServerPort}/library/sections?X-Plex-Token=${plexToken}`;
@@ -150,9 +150,44 @@ function loadShows() {
   return loadFile(showsFilePath);
 }
 
+async function processShows() {
+  const { watchedShows, genresSet, countriesSet } = await fetchPlexShows();
+  const additionalShows = loadShows();
+  additionalShows.forEach((show) => {
+    show.genre.forEach((genre) => genresSet.add(genre));
+    countriesSet.add(show.country);
+    watchedShows.push({
+      title: show.title,
+      thumb: `/thumbnails/${path.basename(show.thumbnail)}`,
+      genres: show.genre,
+      countries: [show.country],
+      key: show.title,
+    });
+  });
+
+  const order = loadOrder();
+  if (!Array.isArray(order)) {
+    throw new Error('Order data is not an array');
+  }
+
+  watchedShows.sort((a, b) => {
+    const aIndex = order.indexOf(a.title);
+    const bIndex = order.indexOf(b.title);
+    return (
+      (aIndex !== -1 ? aIndex : Number.MAX_SAFE_INTEGER) -
+      (bIndex !== -1 ? bIndex : Number.MAX_SAFE_INTEGER)
+    );
+  });
+
+  console.log('watchedShows', watchedShows);
+
+  return { watchedShows, genresSet, countriesSet };
+}
+
 module.exports = {
   fetchPlexShows,
   loadOrder,
   saveOrder,
   loadShows,
+  processShows,
 };
