@@ -32,6 +32,16 @@ app.get('/images/*', async (req, res) => {
 app.get('/', plexController.getPlexShows);
 app.post('/save-order', plexController.saveOrder);
 
+app.get('/tier', (req, res) => {
+  const tiers = ['S', 'A', 'B', 'C', 'D'];
+  const items = [
+    { name: 'Item 1', imageUrl: '/images/item1.png' },
+    { name: 'Item 2', imageUrl: '/images/item2.png' },
+    { name: 'Item 3', imageUrl: '/images/item3.png' },
+  ];
+  res.render('tier-list', { tiers, items });
+});
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');

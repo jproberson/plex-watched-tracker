@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tier List</title>
+  <link rel="stylesheet" href="/tier-list-styles.css">
+</head>
+
+<body>
+  <div class="tier-list-container">
+    <div class="tier-list">
+      <% tiers.forEach(tier=> { %>
+        <div class="tier">
+          <div class="tier-label">
+            <%= tier %>
+          </div>
+          <div class="tier-items" id="tier-<%= tier %>">
+            <!-- Items for this tier will be dropped here -->
+          </div>
+        </div>
+        <% }) %>
+    </div>
+    <div class="item-pool">
+      <% items.forEach(item=> { %>
+        <div class="item" draggable="true" ondragstart="drag(event)" id="<%= item.name %>">
+          <img src="<%= item.imageUrl %>" alt="<%= item.name %>">
+          <div class="item-name">
+            <%= item.name %>
+          </div>
+        </div>
+        <% }) %>
+    </div>
+  </div>
+  <script>
+    function allowDrop(event) {
+      event.preventDefault();
+    }
+
+    function drag(event) {
+      event.dataTransfer.setData("text", event.target.id);
+    }
+
+    function drop(event, tier) {
+      event.preventDefault();
+      var data = event.dataTransfer.getData("text");
+      var item = document.getElementById(data);
+      event.target.appendChild(item);
+    }
+
+    document.querySelectorAll('.tier-items').forEach(tierItems => {
+      tierItems.ondragover = allowDrop;
+      tierItems.ondrop = event => drop(event, tierItems.id);
+    });
+  </script>
+</body>
+
+</html>
