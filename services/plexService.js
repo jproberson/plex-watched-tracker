@@ -179,8 +179,6 @@ async function processShows() {
     );
   });
 
-  console.log('watchedShows', watchedShows);
-
   return { watchedShows, genresSet, countriesSet };
 }
 
