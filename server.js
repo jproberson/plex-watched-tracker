@@ -1,6 +1,8 @@
 const express = require('express');
 const path = require('path');
-const indexRouter = require('./routes/index');
+const plexController = require('./controllers/plexController');
+const { plexServerIp, plexServerPort, plexToken } = require('./server-config');
+const axios = require('axios');
 require('dotenv').config();
 
 const app = express();
@@ -13,10 +15,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve the thumbnails directory as static files
 app.use('/thumbnails', express.static(path.join(configDir, 'thumbnails')));
 
-app.use('/', indexRouter);
+app.get('/images/*', async (req, res) => {
+  try {
+    const imagePath = req.params[0];
+    const imageUrl = `http://${plexServerIp}:${plexServerPort}/${imagePath}?X-Plex-Token=${plexToken}`;
+    const imageResponse = await axios.get(imageUrl, { responseType: 'stream' });
+    imageResponse.data.pipe(res);
+  } catch (error) {
+    console.error('Error fetching image:', error.message);
+    res.status(500).send('Error fetching image');
+  }
+});
+
+app.get('/', plexController.getPlexShows);
+app.post('/save-order', plexController.saveOrder);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
