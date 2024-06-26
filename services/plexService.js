@@ -1,18 +1,61 @@
-const axios = require('axios');
-const path = require('path');
-const {
+// @ts-check
+
+import axios from 'axios';
+import { join, basename } from 'path';
+import {
   plexServerIp,
   plexServerPort,
   plexToken,
   dataDir,
-} = require('../server-config');
-const { loadFile, saveFile } = require('../utils/fileUtils');
+} from '../server-config.js';
+import { loadFile, saveFile } from '../utils/fileUtils.js';
 
-const orderFilePath = path.join(dataDir, 'order.json');
-const showsFilePath = path.join(dataDir, 'shows.json');
+/**
+ * @typedef {import('axios').AxiosResponse} AxiosResponse
+ */
 
-async function fetchPlexShows() {
+/**
+ * @typedef {Object} Genre
+ * @property {string} tag
+ */
+
+/**
+ * @typedef {Object} Country
+ * @property {string} tag
+ */
+
+/**
+ * @typedef {Object} Show
+ * @property {string} title
+ * @property {string} key
+ * @property {string} thumb
+ * @property {Genre[] | Genre} [genres]
+ * @property {Country[] | Country} [countries]
+ * @property {number} [numberOrder]
+ * @property {number} [letterOrder]
+ */
+
+/** @typedef {Object} Order
+ * @property {string} title 
+ * @property {string[]} numberOrder
+ * @property {string[]} letterOrder
+ *
+
+/**
+ * @typedef {Object} OrderList
+ * @property {Order[]} order 
+ */
+
+const orderFilePath = join(dataDir, 'order.json');
+const showsFilePath = join(dataDir, 'shows.json');
+
+/**
+ * Fetches Plex shows and processes them.
+ * @returns {Promise<{ watchedShows: Show[], genresSet: Set<string>, countriesSet: Set<string> }>}
+ */
+export async function fetchPlexShows() {
   const sectionsUrl = `http://${plexServerIp}:${plexServerPort}/library/sections?X-Plex-Token=${plexToken}`;
+  /** @type {AxiosResponse} */
   const sectionsResponse = await axios.get(sectionsUrl);
 
   if (sectionsResponse.status !== 200) {
@@ -24,8 +67,11 @@ async function fetchPlexShows() {
     (dir) => dir.type === 'show',
   );
 
+  /** @type {Show[]} */
   let watchedShows = [];
+  /** @type {Set<string>} */
   let genresSet = new Set();
+  /** @type {Set<string>} */
   let countriesSet = new Set();
 
   for (const section of showSections) {
@@ -35,6 +81,7 @@ async function fetchPlexShows() {
       continue;
     }
     const sectionUrl = `http://${plexServerIp}:${plexServerPort}/library/sections/${sectionKey}/all?X-Plex-Token=${plexToken}`;
+    /** @type {AxiosResponse} */
     const sectionResponse = await axios.get(sectionUrl);
 
     if (sectionResponse.status !== 200) {
@@ -46,28 +93,31 @@ async function fetchPlexShows() {
     const sectionData = sectionResponse.data;
 
     for (const show of sectionData.MediaContainer.Metadata || []) {
-      const showTitle = show.title;
-      const showKey = show.key;
-      const showThumb = show.thumb;
+      /** @type {Show} */
+      const showData = show;
+      const showTitle = showData.title;
+      const showKey = showData.key;
+      const showThumb = showData.thumb;
 
       if (!showTitle || !showKey || !showThumb) {
-        console.warn('Show data is incomplete for show:', show);
+        console.warn('Show data is incomplete for show:', showData);
         continue;
       }
 
       const showUrl = `http://${plexServerIp}:${plexServerPort}${showKey}?X-Plex-Token=${plexToken}`;
+      /** @type {AxiosResponse} */
       const showResponse = await axios.get(showUrl);
 
       if (showResponse.status !== 200) {
         throw new Error(`Failed to fetch show data: ${showResponse.status}`);
       }
 
-      const showData = showResponse.data;
+      const showResponseData = showResponse.data;
       let allEpisodesWatched = true;
 
-      const seasons = Array.isArray(showData.MediaContainer.Metadata)
-        ? showData.MediaContainer.Metadata
-        : [showData.MediaContainer.Metadata];
+      const seasons = Array.isArray(showResponseData.MediaContainer.Metadata)
+        ? showResponseData.MediaContainer.Metadata
+        : [showResponseData.MediaContainer.Metadata];
 
       for (const season of seasons) {
         if (!season) {
@@ -81,6 +131,7 @@ async function fetchPlexShows() {
         }
 
         const seasonUrl = `http://${plexServerIp}:${plexServerPort}${seasonKey}?X-Plex-Token=${plexToken}`;
+        /** @type {AxiosResponse} */
         const seasonResponse = await axios.get(seasonUrl);
 
         if (seasonResponse.status !== 200) {
@@ -110,19 +161,25 @@ async function fetchPlexShows() {
       }
 
       if (allEpisodesWatched) {
-        let genres = [];
-        let countries = [];
-        if (show.Genre) {
-          genres = Array.isArray(show.Genre)
-            ? show.Genre.map((g) => g.tag)
-            : [show.Genre.tag];
-          genres.forEach((genre) => genresSet.add(genre));
+        const genres = [];
+        const countries = [];
+        if (showData.genres) {
+          const showGenres = Array.isArray(showData.genres)
+            ? showData.genres
+            : [showData.genres];
+          showGenres.forEach((g) => {
+            genres.push(g.tag);
+            genresSet.add(g.tag);
+          });
         }
-        if (show.Country) {
-          countries = Array.isArray(show.Country)
-            ? show.Country.map((c) => c.tag)
-            : [show.Country.tag];
-          countries.forEach((country) => countriesSet.add(country));
+        if (showData.countries) {
+          const showCountries = Array.isArray(showData.countries)
+            ? showData.countries
+            : [showData.countries];
+          showCountries.forEach((c) => {
+            countries.push(c.tag);
+            countriesSet.add(c.tag);
+          });
         }
         watchedShows.push({
           title: showTitle,
@@ -138,54 +195,86 @@ async function fetchPlexShows() {
   return { watchedShows, genresSet, countriesSet };
 }
 
+/**
+ * Loads the order from the order file.
+ * @returns {any}
+ */
 function loadOrder() {
   return loadFile(orderFilePath);
 }
 
-function saveOrder(order) {
-  saveFile(orderFilePath, order);
+/**
+ * Saves the order to the order file.
+ * @param {any} updatedOrder
+ */
+export function saveOrder(updatedOrder) {
+  console.log('updatedOrder:', updatedOrder);
+  if (!Array.isArray(updatedOrder)) {
+    throw new Error('updatedOrder data is not an array');
+  }
+
+  saveFile(orderFilePath, updatedOrder);
 }
 
+/**
+ * Loads the shows from the shows file.
+ * @returns {any}
+ */
 function loadShows() {
   return loadFile(showsFilePath);
 }
 
-async function processShows() {
+/**
+ * Processes the shows by fetching from Plex and combining with additional shows.
+ * @returns {Promise<{ watchedShows: Show[], genresSet: Set<string>, countriesSet: Set<string> }>}
+ */
+export async function processShows() {
   const { watchedShows, genresSet, countriesSet } = await fetchPlexShows();
   const additionalShows = loadShows();
+
   additionalShows.forEach((show) => {
-    show.genre.forEach((genre) => genresSet.add(genre));
-    countriesSet.add(show.country);
+    show.genres.forEach((genre) => genresSet.add(genre));
+    countriesSet.add(show.countries);
     watchedShows.push({
       title: show.title,
-      thumb: `/thumbnails/${path.basename(show.thumbnail)}`,
-      genres: show.genre,
-      countries: [show.country],
+      thumb: `/thumbnails/${basename(show.thumbnail)}`,
+      genres: show.genres,
+      countries: [show.countries],
       key: show.title,
     });
   });
 
-  const order = loadOrder();
-  if (!Array.isArray(order)) {
+  /** @type {OrderList} */
+  const orderList = loadOrder();
+
+  if (!Array.isArray(orderList)) {
     throw new Error('Order data is not an array');
   }
 
-  watchedShows.sort((a, b) => {
-    const aIndex = order.indexOf(a.title);
-    const bIndex = order.indexOf(b.title);
-    return (
-      (aIndex !== -1 ? aIndex : Number.MAX_SAFE_INTEGER) -
-      (bIndex !== -1 ? bIndex : Number.MAX_SAFE_INTEGER)
+  // Create a map for quick lookup of order indexes
+  const numberOrderMap = new Map();
+  orderList.forEach(({ title, numberOrder, letterOrder }) => {
+    const matchedShowIndex = watchedShows.findIndex(
+      (show) => show.title === title,
     );
+    if (matchedShowIndex !== -1) {
+      watchedShows[matchedShowIndex].numberOrder = numberOrder;
+      watchedShows[matchedShowIndex].letterOrder = letterOrder;
+      numberOrderMap.set(title, numberOrder);
+    } else {
+      console.warn('Order title not found in watched list:', title);
+    }
+  });
+
+  watchedShows.sort((a, b) => {
+    const aOrder = numberOrderMap.has(a.title)
+      ? numberOrderMap.get(a.title)
+      : Number.MAX_SAFE_INTEGER;
+    const bOrder = numberOrderMap.has(b.title)
+      ? numberOrderMap.get(b.title)
+      : Number.MAX_SAFE_INTEGER;
+    return aOrder - bOrder;
   });
 
   return { watchedShows, genresSet, countriesSet };
 }
-
-module.exports = {
-  fetchPlexShows,
-  loadOrder,
-  saveOrder,
-  loadShows,
-  processShows,
-};

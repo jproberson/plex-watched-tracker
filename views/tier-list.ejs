@@ -6,53 +6,170 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tier List</title>
   <link rel="stylesheet" href="/tier-list-styles.css">
+  <style>
+    .item img {
+      width: 50px;
+      height: auto;
+    }
+  </style>
+  <script src="/vendor/sortablejs/Sortable.min.js"></script>
 </head>
 
 <body>
   <div class="tier-list-container">
     <div class="tier-list">
-      <% tiers.forEach(tier=> { %>
+      <% const tiers = ['S', 'A', 'B', 'C', 'D', 'F']; %>
+      <% tiers.forEach(tier => { %>
         <div class="tier">
           <div class="tier-label">
             <%= tier %>
           </div>
           <div class="tier-items" id="tier-<%= tier %>">
-            <!-- Items for this tier will be dropped here -->
+            <% watchedShows.filter(show => show.letterOrder === tier).forEach(show => { %>
+              <div class="item" data-id="<%= show.key %>" data-title="<%= show.title %>">
+                <img src="<%= show.thumb %>" alt="<%= show.title %>">
+                <div class="item-title">
+                  <%= show.title %>
+                </div>
+              </div>
+            <% }) %>
           </div>
         </div>
-        <% }) %>
+      <% }) %>
     </div>
     <div class="item-pool">
-      <% items.forEach(item=> { %>
-        <div class="item" draggable="true" ondragstart="drag(event)" id="<%= item.name %>">
-          <img src="<%= item.imageUrl %>" alt="<%= item.name %>">
-          <div class="item-name">
-            <%= item.name %>
+      <% watchedShows.filter(show => !show.letterOrder || show.letterOrder === '').forEach(show => { %>
+        <div class="item" data-id="<%= show.key %>" data-title"<%= show.title %>">
+          <img src="<%= show.thumb %>" alt="<%= show.title %>">
+          <div class="item-title">
+            <%= show.title %>
           </div>
         </div>
-        <% }) %>
+      <% }) %>
+    </div>
+    <div style="margin: 20px auto;">
+      <button id="toggle-drag" >Edit List</button>
     </div>
   </div>
   <script>
+    const watchedShows = <%- JSON.stringify(watchedShows).replace(/</g, '\\u003c') %>;
     function allowDrop(event) {
       event.preventDefault();
     }
 
     function drag(event) {
-      event.dataTransfer.setData("text", event.target.id);
+      const itemId = event.target.closest('.item').getAttribute('data-id');
+      console.log('Drag started:', itemId);  // Debug log
+      event.dataTransfer.setData("text/plain", itemId);
     }
 
     function drop(event, tier) {
       event.preventDefault();
-      var data = event.dataTransfer.getData("text");
-      var item = document.getElementById(data);
-      event.target.appendChild(item);
+      const data = event.dataTransfer.getData("text/plain");
+      console.log('Dropping item:', data);  // Debug log
+      const item = document.querySelector(`[data-id='${data}']`);
+      if (item) {
+        console.log('Item found:', item);  // Debug log
+        event.target.closest('.tier-items').appendChild(item);
+        item.setAttribute('data-tier', tier);
+      } else {
+        console.error('Dragged item not found:', data);
+      }
     }
 
-    document.querySelectorAll('.tier-items').forEach(tierItems => {
-      tierItems.ondragover = allowDrop;
-      tierItems.ondrop = event => drop(event, tierItems.id);
+    let adminToken = null;
+    const toggleDragButton = document.getElementById('toggle-drag');
+    let sortable = null;
+
+    toggleDragButton.addEventListener('click', () => {
+      if (!adminToken) {
+        adminToken = prompt('Enter admin token:');
+      }
+
+      if (adminToken) {
+        if (!sortable) {
+          document.querySelectorAll('.item').forEach(item => {
+            item.setAttribute('draggable', true);
+            item.ondragstart = drag;
+          });
+
+          document.querySelectorAll('.tier-items').forEach(tierItems => {
+            tierItems.ondragover = allowDrop;
+            tierItems.ondrop = event => {
+              drop(event, tierItems.id.replace('tier-', ''));
+              saveOrder();  // Save the order whenever an item is dropped
+            };
+          });
+
+          document.querySelector('.item-pool').ondragover = allowDrop;
+          document.querySelector('.item-pool').ondrop = event => {
+            drop(event, '');
+            saveOrder();  // Save the order whenever an item is dropped
+          };
+
+          sortable = new Sortable(document.querySelector('.tier-items, .item-pool'), {
+            animation: 150,
+            onEnd: function () {
+              saveOrder();
+            },
+          });
+          toggleDragButton.innerText = 'Disable Edit Mode';
+        } else {
+          document.querySelectorAll('.item').forEach(item => {
+            item.removeAttribute('draggable');
+            item.ondragstart = null;
+          });
+
+          document.querySelectorAll('.tier-items').forEach(tierItems => {
+            tierItems.ondragover = null;
+            tierItems.ondrop = null;
+          });
+
+          document.querySelector('.item-pool').ondragover = null;
+          document.querySelector('.item-pool').ondrop = null;
+
+          sortable.destroy();
+          sortable = null;
+          toggleDragButton.innerText = 'Enable Edit Mode';
+        }
+      }
     });
+
+    async function saveOrder() {
+      const updatedShows = [];
+
+      document.querySelectorAll('.tier-items').forEach((tierItems, index) => {
+        const tierId = tierItems.id.replace('tier-', '');
+        tierItems.querySelectorAll('.item').forEach(item => {
+          const itemTitle = item.getAttribute('data-title');
+          updatedShows.push({ title: itemTitle, numberOrder: updatedShows.length, letterOrder: tierId });
+        });
+      });
+
+      // Update items in the item pool (unranked)
+      document.querySelector('.item-pool').querySelectorAll('.item').forEach(item => {
+        const itemTitle = item.getAttribute('data-title');
+        updatedShows.push({ title: itemTitle, numberOrder: updatedShows.length, letterOrder: '' });
+      });
+
+      try {
+        const response = await fetch('/save-order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ updatedShows, token: adminToken }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save order');
+        }
+
+        console.log('Order saved successfully');
+      } catch (error) {
+        console.error('Error saving order:', error.message);
+      }
+    }
   </script>
 </body>
 

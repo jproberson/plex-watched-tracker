@@ -1,9 +1,28 @@
-const plexService = require('../services/plexService');
+// @ts-check
 
-const getPlexShows = async (req, res, next) => {
+import {
+  processShows,
+  saveOrder as saveOrderService,
+} from '../services/plexService.js';
+
+/**
+ * @typedef {import('express').Request} Request
+ * @typedef {import('express').Response} Response
+ * @typedef {import('express').NextFunction} NextFunction
+ */
+
+/**
+ * Gets Plex shows and renders the index page.
+ * @param {Request} req
+ * @param {Response} res
+ * @param {NextFunction} next
+ */
+export const getPlexShows = async (req, res, next) => {
   try {
-    const { watchedShows, genresSet, countriesSet } =
-      await plexService.processShows();
+    const { watchedShows, genresSet, countriesSet } = await processShows();
+    console.log('genresSet:', genresSet);
+    console.log('countriesSet:', countriesSet);
+    console.log('watchedShows:', watchedShows);
     res.render('index', {
       watchedShows,
       genres: Array.from(genresSet),
@@ -16,16 +35,38 @@ const getPlexShows = async (req, res, next) => {
   }
 };
 
-const saveOrder = (req, res) => {
-  const { order, token } = req.body;
-  if (token !== process.env.ADMIN_TOKEN) {
-    return res.status(403).send('Forbidden');
+/**
+ * Saves the order of shows.
+ * @param {Request} req
+ * @param {Response} res
+ */
+export const saveOrder = (req, res) => {
+  const { updatedShows, token } = req.body;
+
+  if (!updatedShows || !token) {
+    return res.status(400).json({ error: 'Invalid data' });
   }
-  plexService.saveOrder(order);
-  res.send('Order saved');
+
+  try {
+    saveOrderService(updatedShows);
+    res.status(200).json({ message: 'Order saved successfully' });
+  } catch (error) {
+    console.error('Error saving order:', error.message);
+    res.status(500).json({ error: 'Failed to save order' });
+  }
 };
 
-module.exports = {
-  getPlexShows,
-  saveOrder,
+/**
+ * Gets the tier list and renders the tier list page.
+ * @param {Request} req
+ * @param {Response} res
+ * @param {NextFunction} next
+ */
+export const getTierList = async (req, res, next) => {
+  try {
+    const { watchedShows } = await processShows();
+    res.render('tier-list', { watchedShows });
+  } catch (error) {
+    next(error);
+  }
 };
