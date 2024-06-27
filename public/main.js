@@ -62,7 +62,6 @@ async function saveOrder() {
     const title = show.getAttribute('data-title');
     order.push({ title, numberOrder: index });
   });
-  console.log('saving order:', order);
   try {
     const response = await fetch('/save-order', {
       method: 'POST',
@@ -75,8 +74,6 @@ async function saveOrder() {
     if (!response.ok) {
       throw new Error('Failed to save order');
     }
-
-    console.log('Order saved successfully');
   } catch (error) {
     console.error('Error saving order:', error.message);
   }

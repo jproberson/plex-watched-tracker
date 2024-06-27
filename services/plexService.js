@@ -208,7 +208,6 @@ function loadOrder() {
  * @param {any} updatedOrder
  */
 export function saveOrder(updatedOrder) {
-  console.log('updatedOrder:', updatedOrder);
   if (!Array.isArray(updatedOrder)) {
     throw new Error('updatedOrder data is not an array');
   }
