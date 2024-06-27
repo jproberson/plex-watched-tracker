@@ -213,7 +213,39 @@ export function saveOrder(updatedOrder) {
     throw new Error('updatedOrder data is not an array');
   }
 
-  saveFile(orderFilePath, updatedOrder);
+  // Load the existing order
+  const currentOrder = loadOrder();
+
+  // Create a map for quick lookup of current shows
+  const currentOrderMap = new Map();
+  currentOrder.forEach((show) => {
+    currentOrderMap.set(show.title, show);
+  });
+
+  // Merge the updated shows with the current order
+  const mergedOrder = updatedOrder.map((updatedShow) => {
+    const existingShow = currentOrderMap.get(updatedShow.title);
+    if (existingShow) {
+      return {
+        ...existingShow,
+        numberOrder: updatedShow.numberOrder,
+        ...(updatedShow.letterOrder !== undefined && {
+          letterOrder: updatedShow.letterOrder,
+        }),
+      };
+    } else {
+      return updatedShow;
+    }
+  });
+
+  // Add any existing shows that were not in the updatedShows array
+  currentOrder.forEach((show) => {
+    if (!updatedOrder.find((updatedShow) => updatedShow.title === show.title)) {
+      mergedOrder.push(show);
+    }
+  });
+
+  saveFile(orderFilePath, mergedOrder);
 }
 
 /**

@@ -58,17 +58,18 @@ toggleDragButton.addEventListener('click', () => {
 
 async function saveOrder() {
   const order = [];
-  document.querySelectorAll('.show').forEach((show) => {
-    order.push(show.getAttribute('data-title')); // Use data-title attribute to get the show title
+  document.querySelectorAll('.show').forEach((show, index) => {
+    const title = show.getAttribute('data-title');
+    order.push({ title, numberOrder: index });
   });
-
+  console.log('saving order:', order);
   try {
     const response = await fetch('/save-order', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ order, token: adminToken }),
+      body: JSON.stringify({ updatedShows: order, token: adminToken }),
     });
 
     if (!response.ok) {

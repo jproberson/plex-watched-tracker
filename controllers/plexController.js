@@ -20,9 +20,6 @@ import {
 export const getPlexShows = async (req, res, next) => {
   try {
     const { watchedShows, genresSet, countriesSet } = await processShows();
-    console.log('genresSet:', genresSet);
-    console.log('countriesSet:', countriesSet);
-    console.log('watchedShows:', watchedShows);
     res.render('index', {
       watchedShows,
       genres: Array.from(genresSet),
