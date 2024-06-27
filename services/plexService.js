@@ -293,7 +293,6 @@ export async function processShows() {
       watchedShows[matchedShowIndex].letterOrder = letterOrder;
       numberOrderMap.set(title, numberOrder);
     } else {
-      console.warn('Order title not found in watched list:', title);
     }
   });
 
