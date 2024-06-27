@@ -252,7 +252,8 @@ export function saveOrder(updatedOrder) {
  * @returns {any}
  */
 function loadShows() {
-  return loadFile(showsFilePath);
+  const shows = loadFile(showsFilePath);
+  return shows;
 }
 
 /**
@@ -261,16 +262,16 @@ function loadShows() {
  */
 export async function processShows() {
   const { watchedShows, genresSet, countriesSet } = await fetchPlexShows();
-  const additionalShows = loadShows();
+  const additionalShows = loadShows() || [];
 
   additionalShows.forEach((show) => {
     show.genres.forEach((genre) => genresSet.add(genre));
-    countriesSet.add(show.countries);
+    countriesSet.add(show.country);
     watchedShows.push({
       title: show.title,
       thumb: `/thumbnails/${basename(show.thumbnail)}`,
       genres: show.genres,
-      countries: [show.countries],
+      countries: [show.country],
       key: show.title,
     });
   });

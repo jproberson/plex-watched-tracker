@@ -12,6 +12,6 @@ services:
     volumes:
       - ${DATA_DIR}:/usr/src/app/data
     ports:
-      - "42069:3000"
+      - "${PORT}:3000"
     env_file:
       - .env

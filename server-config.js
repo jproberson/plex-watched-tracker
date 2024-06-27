@@ -7,7 +7,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export const port = process.env.PORT || 5000;
+export const port = process.env.PORT || 3000;
 export const plexServerIp = process.env.PLEX_SERVER_IP || '192.168.0.180';
 export const plexServerPort = process.env.PLEX_SERVER_PORT || 32400;
 export const plexToken = process.env.PLEX_TOKEN || 'L_JC9WjTCoEcm4ZvbVCf&';
