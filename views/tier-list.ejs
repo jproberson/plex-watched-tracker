@@ -1,0 +1,157 @@
+<%- include('partials/head', { title: 'Tier List' }) %>
+
+<body>
+  <%- include('partials/header') %>
+  <div class="tier-list-container">
+    <div class="tier-list">
+      <% const tiers = ['S', 'A', 'B', 'C', 'D', 'F']; %>
+      <% tiers.forEach(tier => { %>
+        <div class="tier">
+          <div class="tier-label">
+            <%= tier %>
+          </div>
+          <div class="tier-items" id="tier-<%= tier %>">
+            <% watchedShows.filter(show => show.letterOrder === tier).forEach(show => { %>
+              <div class="item" data-id="<%= show.key %>" data-title="<%= show.title %>">
+                <img src="<%= show.thumb %>" alt="<%= show.title %>">
+                <div class="item-title">
+                  <%= show.title %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+    <div class="item-pool">
+      <% watchedShows.filter(show => !show.letterOrder || show.letterOrder === '').forEach(show => { %>
+        <div class="item" data-id="<%= show.key %>" data-title="<%= show.title %>">
+          <img src="<%= show.thumb %>" alt="<%= show.title %>">
+          <div class="item-title">
+            <%= show.title %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+    <div style="margin: 20px auto;">
+      <button id="toggle-drag">Edit List</button>
+    </div>
+  </div>
+  <script>
+    const watchedShows = <%- JSON.stringify(watchedShows).replace(/</g, '\\u003c') %>;
+
+    function allowDrop(event) {
+      event.preventDefault();
+    }
+
+    function drag(event) {
+      const itemId = event.target.closest('.item').getAttribute('data-id');
+      event.dataTransfer.setData("text/plain", itemId);
+    }
+
+    function drop(event, tier) {
+      event.preventDefault();
+      const data = event.dataTransfer.getData("text/plain");
+      const item = document.querySelector(`[data-id='${data}']`);
+      if (item) {
+        event.target.closest('.tier-items').appendChild(item);
+        item.setAttribute('data-tier', tier);
+      }
+    }
+
+    let adminToken = null;
+    const toggleDragButton = document.getElementById('toggle-drag');
+    let sortable = null;
+
+    toggleDragButton.addEventListener('click', () => {
+      if (!adminToken) {
+        adminToken = prompt('Enter admin token:');
+      }
+
+      if (adminToken) {
+        if (!sortable) {
+          document.querySelectorAll('.item').forEach(item => {
+            item.setAttribute('draggable', true);
+            item.ondragstart = drag;
+          });
+
+          document.querySelectorAll('.tier-items').forEach(tierItems => {
+            tierItems.ondragover = allowDrop;
+            tierItems.ondrop = event => {
+              drop(event, tierItems.id.replace('tier-', ''));
+              saveOrder(); // Save the order whenever an item is dropped
+            };
+          });
+
+          document.querySelector('.item-pool').ondragover = allowDrop;
+          document.querySelector('.item-pool').ondrop = event => {
+            drop(event, '');
+            saveOrder(); // Save the order whenever an item is dropped
+          };
+
+          sortable = new Sortable(document.querySelector('.tier-items, .item-pool'), {
+            animation: 150,
+            onEnd: function () {
+              saveOrder();
+            },
+          });
+          toggleDragButton.innerText = 'Disable Edit Mode';
+        } else {
+          document.querySelectorAll('.item').forEach(item => {
+            item.removeAttribute('draggable');
+            item.ondragstart = null;
+          });
+
+          document.querySelectorAll('.tier-items').forEach(tierItems => {
+            tierItems.ondragover = null;
+            tierItems.ondrop = null;
+          });
+
+          document.querySelector('.item-pool').ondragover = null;
+          document.querySelector('.item-pool').ondrop = null;
+
+          sortable.destroy();
+          sortable = null;
+          toggleDragButton.innerText = 'Enable Edit Mode';
+        }
+      }
+    });
+
+    async function saveOrder() {
+      const updatedShows = [];
+
+      document.querySelectorAll('.tier-items').forEach((tierItems, index) => {
+        const tierId = tierItems.id.replace('tier-', '');
+        tierItems.querySelectorAll('.item').forEach(item => {
+          const itemTitle = item.getAttribute('data-title');
+          updatedShows.push({ title: itemTitle, letterOrder: tierId });
+        });
+      });
+
+      // Update items in the item pool (unranked)
+      document.querySelector('.item-pool').querySelectorAll('.item').forEach(item => {
+        const itemTitle = item.getAttribute('data-title');
+        updatedShows.push({ title: itemTitle, letterOrder: '' });
+      });
+
+      try {
+        const response = await fetch('/save-order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ updatedShows, token: adminToken }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save order');
+        }
+
+      } catch (error) {
+        console.error('Error saving order:', error.message);
+      }
+    }
+  </script>
+</body>
+
+</html>

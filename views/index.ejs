@@ -1,18 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Watched TV Shows</title>
-  <link rel="stylesheet" href="/styles.css" />
-  <script src="/vendor/sortablejs/Sortable.min.js"></script>
-</head>
+<%- include('partials/head', { title: 'Watched TV Shows' }) %>
 
 <body>
-  <header>
-    <h1>Watched TV Shows</h1>
-  </header>
+  <%- include('partials/header') %>
   <div class="filters">
     <input type="text" id="search-bar" onkeyup="filterShows()" placeholder="Search for shows..." />
     <select id="genre-filter" onchange="filterShows()">
@@ -33,7 +22,7 @@
     </select>
   </div>
   <div id="show-container" class="shows-container">
-    <% if (watchedShows.length> 0) { %>
+    <% if (watchedShows.length > 0) { %>
       <% watchedShows.forEach(function(show, index) { %>
         <div class="show" id="show-<%= index %>" data-id="show-<%= index %>" data-title="<%= show.title %>"
           data-genres="<%= show.genres.join(',') %>" data-countries="<%= show.countries.join(',') %>">
@@ -48,17 +37,17 @@
             <%= show.title %>
           </h2>
           <p>Genres: <%= show.genres.join(', ') %></p>
-        <p>Country: <%= show.countries.join(' , ') %></p>
-      </div>
+          <p>Country: <%= show.countries.join(', ') %></p>
+        </div>
       <% }); %>
-      <% } else { %>
+    <% } else { %>
       <p>No watched shows found.</p>
-      <% } %>
-    </div>
-    <input type="hidden" id="admin-token" value="<%= ADMIN_TOKEN %>" />
-    <% if (ADMIN_TOKEN) { %>
-    <button id="toggle-drag">Edit List</button>
     <% } %>
-    <script src="/main.js" type="module"></script>
-  </body>
+  </div>
+  <input type="hidden" id="admin-token" value="<%= ADMIN_TOKEN %>" />
+  <% if (ADMIN_TOKEN) { %>
+    <button id="toggle-drag">Edit List</button>
+  <% } %>
+  <script src="/main.js" type="module"></script>
+</body>
 </html>
