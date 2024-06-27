@@ -22,7 +22,7 @@ PLEX_SERVER_IP=your_plex_server_ip
 PLEX_SERVER_PORT=32400
 PLEX_TOKEN=your_plex_token
 ADMIN_TOKEN=your_admin_token
-PORT=3000
+PORT=your_preferred_port
 ```
 ### Manual List
 If you want to include a manual list of shows, create a directory called manual-watched-list in your project root. Inside this directory, create two subdirectories: thumbnails and shows.json.
@@ -32,7 +32,7 @@ If you want to include a manual list of shows, create a directory called manual-
 [
   {
     "title": "Show Title",
-    "genre": ["Genre1", "Genre2"],
+    "genres": ["Genre1", "Genre2"],
     "country": "Country",
     "thumbnail": "show_thumbnail.jpg"
   },
