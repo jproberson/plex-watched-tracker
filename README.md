@@ -1,12 +1,8 @@
-# Plex Watched Tracker
-This project tracks watched TV shows from your Plex server and a manual list. It displays the shows in a web interface, allowing you to filter and sort them.
+# Plex Watched Tracker - Warning don't use
+This project intended to try out using ejs files with node.
+So it will change drastically in time.
 
-## Features
-- Tracks watched TV shows from Plex.
-- Supports a manual list of watched shows.
-- Allows filtering by genre and country.
-- Drag-and-drop sorting of shows with persistent order.
-- Secure sorting with an admin token.
+This project tracks watched TV shows from your Plex server and a manual list. It displays the shows in a web interface, allowing you to filter and sort them.
 
 ## Prerequisites
 - Docker
@@ -87,13 +83,3 @@ services:
       - "42069:3000"
 ```
 To start the service, run: `docker-compose up -d`
-
-## Usage
-### Accessing the Application
-Once the server is running, you can access the application in your web browser at `http://localhost:42069`.
-
-## Filtering and Sorting
-- Use the search bar to filter shows by title.
-- Use the dropdown menus to filter shows by genre and country.
-- Click the "Enable Edit Mode" button to enable drag-and-drop sorting. You will be prompted to enter the admin token.
-- The sorted order will be saved and persist across sessions.
