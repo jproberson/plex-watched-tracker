@@ -2,7 +2,7 @@ import {
   plexServerIp,
   plexServerPort,
   plexToken,
-} from '../server-config.js';
+} from '../server-config.ts';
 
 import axios from 'axios';
 
