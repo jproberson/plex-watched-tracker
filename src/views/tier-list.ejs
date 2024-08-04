@@ -1,4 +1,4 @@
-<%- include('partials/head', { title: 'Tier List' }) %>
+<%- include('partials/head', { title: "Tier list", ADMIN_TOKEN: ADMIN_TOKEN }) %>
 
 <body>
   <%- include('partials/header') %>
@@ -13,7 +13,7 @@
           <div class="tier-items" id="tier-<%= tier %>">
             <% watchedShows.filter(show => show.letterOrder === tier).forEach(show => { %>
               <div class="item" data-id="<%= show.key %>" data-title="<%= show.title %>">
-                <img src="<%= show.thumb %>" alt="<%= show.title %>">
+                <img src="<%= show.thumbnail %>" alt="<%= show.title %>">
                 <div class="item-title">
                   <%= show.title %>
                 </div>
@@ -26,15 +26,12 @@
     <div class="item-pool">
       <% watchedShows.filter(show => !show.letterOrder || show.letterOrder === '').forEach(show => { %>
         <div class="item" data-id="<%= show.key %>" data-title="<%= show.title %>">
-          <img src="<%= show.thumb %>" alt="<%= show.title %>">
+          <img src="<%= show.thumbnail %>" alt="<%= show.title %>">
           <div class="item-title">
             <%= show.title %>
           </div>
         </div>
       <% }) %>
-    </div>
-    <div style="margin: 20px auto;">
-      <button id="toggle-drag">Edit List</button>
     </div>
   </div>
   <script>

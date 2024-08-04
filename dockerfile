@@ -14,4 +14,4 @@ COPY .env ./
 
 EXPOSE $PORT
 
-CMD ["node", "server.js"]
+CMD ["node", "server.ts"]
