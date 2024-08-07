@@ -8,10 +8,12 @@ COPY package*.json ./
 
 RUN npm install
 
-COPY src/ ./src
+COPY . .
+
+RUN npm run build
 
 COPY .env ./
 
 EXPOSE $PORT
 
-CMD ["node", "src/server.ts"]
+CMD ["node", "dist/server.js"]
