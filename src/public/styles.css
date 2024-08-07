@@ -21,7 +21,7 @@ h1 {
 /* Header */
 .header-container {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: 20px;
   background-color: #1f1f1f;

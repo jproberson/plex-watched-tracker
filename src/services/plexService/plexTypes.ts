@@ -17,25 +17,34 @@ export interface PlexSectionsResponse {
   MediaContainer: PlexMediaContainer;
 }
 
-export interface PlexMetadata {
-  title: string;
-  key: string;
-  thumb?: string;
-  genres?: Array<{ tag: string }>;
-  countries?: Array<{ tag: string }>;
-
-  [key: string]: unknown;
-}
-
-export interface PlexShowResponse {
+export interface PlexSectionData {
   MediaContainer: {
-    Metadata: PlexMetadata[];
+    size: number;
+    allowSync: boolean;
+    title1: string;
+    Directory: PlexDirectory[];
+    art: string;
+    thumb: string;
+    content: string;
+    identifier: string;
+    librarySectionID: number;
+    librarySectionTitle: string;
+    librarySectionUUID: string;
+    mediaTagPrefix: string;
+    mediaTagVersion: number;
+    nocache: boolean;
+    viewGroup: string;
+    Metadata: ShowMetaData[];
   };
+
 }
 
-export interface PlexSeasonResponse {
+export interface PlexSections {
   MediaContainer: {
-    Metadata: PlexMetadata[];
+    size: number;
+    allowSync: boolean;
+    title1: string;
+    Directory: PlexDirectory[];
   };
 }
 
@@ -87,7 +96,7 @@ export interface ShowTrackerData {
   title: string;
   genres: string[];
   country: string;
-  thumbnail: string;
-  numberOrder?: string,
+  thumb: string;
+  numberOrder?: number,
   letterOrder?: string
 }

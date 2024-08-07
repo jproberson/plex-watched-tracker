@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { processShows, saveOrder as saveOrderService } from '../services/plexService.js';
-import { ShowTrackerData } from '../services/plexTypes.js';
+import { processShows } from '../services/plexService/plexService.js';
+import { ShowTrackerData } from '../services/plexService/plexTypes.js';
+import { saveOrder } from '../services/plexService/plexOrder.js';
 
 interface SaveOrderRequest extends Request {
   body: {
@@ -9,7 +10,7 @@ interface SaveOrderRequest extends Request {
   };
 }
 
-export const saveOrder = (req: SaveOrderRequest, res: Response) => {
+export const saveShowOrder = (req: SaveOrderRequest, res: Response) => {
   const { updatedShows, token } = req.body;
 
   if (!updatedShows || !token) {
@@ -17,7 +18,7 @@ export const saveOrder = (req: SaveOrderRequest, res: Response) => {
   }
 
   try {
-    saveOrderService(updatedShows);
+    saveOrder(updatedShows);
     res.status(200).json({ message: 'Order saved successfully' });
   } catch (error) {
     if (error instanceof Error) {

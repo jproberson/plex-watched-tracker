@@ -1,154 +1,131 @@
 <%- include('partials/head', { title: "Tier list", ADMIN_TOKEN: ADMIN_TOKEN }) %>
 
 <body>
-  <%- include('partials/header') %>
-  <div class="tier-list-container">
+<header>
+    <div class="header-container">
+        <h1>Watched TV Shows</h1>
+        <% if (ADMIN_TOKEN) { %>
+            <button id="toggle-drag">Edit List</button>
+        <% } %>
+    </div>
+</header>
+<div class="tier-list-container">
     <div class="tier-list">
-      <% const tiers = ['S', 'A', 'B', 'C', 'D', 'F']; %>
-      <% tiers.forEach(tier => { %>
-        <div class="tier">
-          <div class="tier-label">
-            <%= tier %>
-          </div>
-          <div class="tier-items" id="tier-<%= tier %>">
-            <% watchedShows.filter(show => show.letterOrder === tier).forEach(show => { %>
-              <div class="item" data-id="<%= show.key %>" data-title="<%= show.title %>">
-                <img src="<%= show.thumbnail %>" alt="<%= show.title %>">
-                <div class="item-title">
-                  <%= show.title %>
+        <% const tiers = ['S', 'A', 'B', 'C', 'D', 'F']; %>
+        <% tiers.forEach(tier => { %>
+            <div class="tier">
+                <div class="tier-label">
+                    <%= tier; %>
                 </div>
-              </div>
-            <% }) %>
-          </div>
-        </div>
-      <% }) %>
+                <div class="tier-items" id="tier-<%= tier; %>">
+                    <% watchedShows.filter(show => show.letterOrder === tier).forEach(show => { %>
+                        <div class="item" data-id="<%= show.key; %>" data-title="<%= show.title; %>">
+                            <img src="/thumbnails/<%= show.thumb; %>" alt="<%= show.title; %>">
+                            <div class="item-title">
+                                <%= show.title; %>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            </div>
+        <% }); %>
     </div>
     <div class="item-pool">
-      <% watchedShows.filter(show => !show.letterOrder || show.letterOrder === '').forEach(show => { %>
-        <div class="item" data-id="<%= show.key %>" data-title="<%= show.title %>">
-          <img src="<%= show.thumbnail %>" alt="<%= show.title %>">
-          <div class="item-title">
-            <%= show.title %>
-          </div>
-        </div>
-      <% }) %>
+        <% watchedShows.filter(show => !show.letterOrder).forEach(show => { %>
+            <div class="item" data-id="<%= show.key; %>" data-title="<%= show.title; %>">
+                <img src="/thumbnails/<%= show.thumb; %>" alt="<%= show.title; %>">
+                <div class="item-title">
+                    <%= show.title; %>
+                </div>
+            </div>
+        <% }); %>
     </div>
-  </div>
-  <script>
-    const watchedShows = <%- JSON.stringify(watchedShows).replace(/</g, '\\u003c') %>;
+</div>
 
-    function allowDrop(event) {
-      event.preventDefault();
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.css" />
+
+<script>
+  const watchedShows = <%- JSON.stringify(watchedShows).replace(/</g, '\\u003c'); %>;
+
+  let adminToken = null;
+  const toggleDragButton = document.getElementById('toggle-drag');
+  let drake = null;
+
+  toggleDragButton.addEventListener('click', () => {
+    if (!adminToken) {
+      adminToken = prompt('Enter admin token:');
     }
 
-    function drag(event) {
-      const itemId = event.target.closest('.item').getAttribute('data-id');
-      event.dataTransfer.setData("text/plain", itemId);
-    }
+    if (adminToken) {
+      if (!drake) {
+        drake = dragula([...document.querySelectorAll('.tier-items'), document.querySelector('.item-pool')]);
 
-    function drop(event, tier) {
-      event.preventDefault();
-      const data = event.dataTransfer.getData("text/plain");
-      const item = document.querySelector(`[data-id='${data}']`);
-      if (item) {
-        event.target.closest('.tier-items').appendChild(item);
-        item.setAttribute('data-tier', tier);
+        drake.on('drop', (el, target, source, sibling) => {
+          updateOrder();
+        });
+
+        document.querySelectorAll('.item').forEach(item => {
+          item.setAttribute('draggable', true);
+        });
+
+        toggleDragButton.innerText = 'Disable Edit Mode';
+      } else {
+        drake.destroy();
+        drake = null;
+        document.querySelectorAll('.item').forEach(item => {
+          item.removeAttribute('draggable');
+        });
+
+        toggleDragButton.innerText = 'Enable Edit Mode';
       }
     }
+  });
 
-    let adminToken = null;
-    const toggleDragButton = document.getElementById('toggle-drag');
-    let sortable = null;
+  function updateOrder() {
+    const updatedShows = [];
 
-    toggleDragButton.addEventListener('click', () => {
-      if (!adminToken) {
-        adminToken = prompt('Enter admin token:');
-      }
-
-      if (adminToken) {
-        if (!sortable) {
-          document.querySelectorAll('.item').forEach(item => {
-            item.setAttribute('draggable', true);
-            item.ondragstart = drag;
-          });
-
-          document.querySelectorAll('.tier-items').forEach(tierItems => {
-            tierItems.ondragover = allowDrop;
-            tierItems.ondrop = event => {
-              drop(event, tierItems.id.replace('tier-', ''));
-              saveOrder(); // Save the order whenever an item is dropped
-            };
-          });
-
-          document.querySelector('.item-pool').ondragover = allowDrop;
-          document.querySelector('.item-pool').ondrop = event => {
-            drop(event, '');
-            saveOrder(); // Save the order whenever an item is dropped
-          };
-
-          sortable = new Sortable(document.querySelector('.tier-items, .item-pool'), {
-            animation: 150,
-            onEnd: function () {
-              saveOrder();
-            },
-          });
-          toggleDragButton.innerText = 'Disable Edit Mode';
-        } else {
-          document.querySelectorAll('.item').forEach(item => {
-            item.removeAttribute('draggable');
-            item.ondragstart = null;
-          });
-
-          document.querySelectorAll('.tier-items').forEach(tierItems => {
-            tierItems.ondragover = null;
-            tierItems.ondrop = null;
-          });
-
-          document.querySelector('.item-pool').ondragover = null;
-          document.querySelector('.item-pool').ondrop = null;
-
-          sortable.destroy();
-          sortable = null;
-          toggleDragButton.innerText = 'Enable Edit Mode';
+    document.querySelectorAll('.tier-items').forEach(tierItems => {
+      const tierId = tierItems.id.replace('tier-', '');
+      tierItems.querySelectorAll('.item').forEach((item, index) => {
+        const itemTitle = item.getAttribute('data-title');
+        const show = watchedShows.find(s => s.title === itemTitle);
+        if (show) {
+          updatedShows.push({ ...show, letterOrder: tierId, numberOrder: index + 1 });
         }
+      });
+    });
+
+    document.querySelector('.item-pool').querySelectorAll('.item').forEach(item => {
+      const itemTitle = item.getAttribute('data-title');
+      const show = watchedShows.find(s => s.title === itemTitle);
+      if (show) {
+        updatedShows.push({ ...show, letterOrder: '', numberOrder: null });
       }
     });
 
-    async function saveOrder() {
-      const updatedShows = [];
+    saveOrder(updatedShows);
+  }
 
-      document.querySelectorAll('.tier-items').forEach((tierItems, index) => {
-        const tierId = tierItems.id.replace('tier-', '');
-        tierItems.querySelectorAll('.item').forEach(item => {
-          const itemTitle = item.getAttribute('data-title');
-          updatedShows.push({ title: itemTitle, letterOrder: tierId });
-        });
+  async function saveOrder(updatedShows) {
+    try {
+      const response = await fetch('/save-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ updatedShows, token: adminToken }),
       });
 
-      // Update items in the item pool (unranked)
-      document.querySelector('.item-pool').querySelectorAll('.item').forEach(item => {
-        const itemTitle = item.getAttribute('data-title');
-        updatedShows.push({ title: itemTitle, letterOrder: '' });
-      });
-
-      try {
-        const response = await fetch('/save-order', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ updatedShows, token: adminToken }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save order');
-        }
-
-      } catch (error) {
-        console.error('Error saving order:', error.message);
+      if (!response.ok) {
+        throw new Error('Failed to save order');
       }
+
+    } catch (error) {
+      console.error('Error saving order:', error.message);
     }
-  </script>
+  }
+</script>
 </body>
 
 </html>

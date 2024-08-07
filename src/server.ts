@@ -1,8 +1,8 @@
-import express, { json, urlencoded, static as serveStatic, Request, Response } from 'express';
+import express, { json, urlencoded, static as serveStatic, Request, Response, NextFunction } from 'express';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { saveOrder, getTierList } from './controllers/plexController.js';
+import { saveShowOrder, getTierList } from './controllers/plexController.js';
 import { plexServerIp, plexServerPort, plexToken, dataDir, port } from './server-config.js';
 import axios from 'axios';
 
@@ -36,13 +36,13 @@ app.get('/images/*', async (req: Request, res: Response) => {
       res.status(500).send('Unknown error fetching image');
     }
   }
-});
+})
 
-app.post('/save-order', saveOrder);
+app.post('/save-order', saveShowOrder);
 
 app.get('/', getTierList);
 
-app.use((err: unknown, req: Request, res: Response) => {
+app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof Error) {
     console.error(err.stack);
     res.status(500).send('Something broke!');
@@ -51,6 +51,7 @@ app.use((err: unknown, req: Request, res: Response) => {
     res.status(500).send('Unknown error');
   }
 });
+
 
 app.listen(port, () => {
   console.log(`Plex watched tracker running at http://localhost:${port}`);
