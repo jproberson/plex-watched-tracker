@@ -8,10 +8,10 @@ COPY package*.json ./
 
 RUN npm install
 
-COPY . .
+COPY src/ ./src
 
 COPY .env ./
 
 EXPOSE $PORT
 
-CMD ["node", "server.ts"]
+CMD ["node", "src/server.ts"]
