@@ -5,7 +5,8 @@
   "main": "server.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "cp -R src/views dist/ && cp -R src/public dist/",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "lint": "eslint ."
