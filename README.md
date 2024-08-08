@@ -2,7 +2,7 @@
 This project intended to try out using ejs files with node.
 So it will change drastically in time.
 
-This project tracks watched TV shows from your Plex server and a manual list. It displays the shows in a web interface, allowing you to filter and sort them.
+This project tracks watched TV shows from your Plex server and a manual list.
 
 ## Prerequisites
 - Docker
@@ -21,16 +21,17 @@ ADMIN_TOKEN=your_admin_token
 PORT=your_preferred_port
 ```
 ### Manual List
-If you want to include a manual list of shows, create a directory called manual-watched-list in your project root. Inside this directory, create two subdirectories: thumbnails and shows.json.
+If you want to include a manual list of shows, create a directory called manual-watched-list in your project root. Inside this directory, create a file: show-overrides.json. 
+If you have ran the app already there should be a directory thumbnails, if not then create it.
 
-- shows.json: A JSON file containing your manual list of shows in the following format:
+- show-overrides.json: A JSON file containing your manual list of shows in the following format:
 ```json
 [
   {
     "title": "Show Title",
     "genres": ["Genre1", "Genre2"],
-    "country": "Country",
-    "thumbnail": "show_thumbnail.jpg"
+    "countries": "Country",
+    "thumb": "show_thumbnail.jpg"
   },
 ]
 ```
@@ -55,7 +56,7 @@ docker build -t plex-watched-tracker .
 
 2. Run the Docker container with the manual list:
 ```
-docker run -d --name plex-watched-tracker -p 42069:3000 \
+docker run -d --name plex-watched-tracker -p 5000:3000 \
     -e PLEX_SERVER_IP=your_plex_server_ip \
     -e PLEX_SERVER_PORT=32400 \
     -e PLEX_TOKEN=your_plex_token \
@@ -80,6 +81,6 @@ services:
     volumes:
       - $/path/to/data_dir:/usr/src/app/data
     ports:
-      - "42069:3000"
+      - "${PORT}:3000"
 ```
 To start the service, run: `docker-compose up -d`
