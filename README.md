@@ -43,7 +43,7 @@ To run the project locally, follow these steps:
 ### Install dependencies:
 
 1. Install dependencies: `npm install`
-2. Start the server: `npm run start`
+2. Start the server: `npm run dev`
 
 ## Docker Setup
 To run the project in a Docker container, follow these steps:
