@@ -57,12 +57,12 @@ export function ensureDirectoryExists(directoryPath: string): void {
   }
 }
 
-export function validateAndSaveThumbnail(currentThumbnails: string[], thumbnailName: string, thumbUrl: string, thumbnailsDir: string): Promise<void> {
+export async function validateAndSaveThumbnail(currentThumbnails: string[], thumbnailName: string, thumbUrl: string, thumbnailsDir: string): Promise<void> {
   ensureDirectoryExists(thumbnailsDir);
   const thumbnailPath = path.join(thumbnailsDir, `${thumbnailName}.jpg`);
   if (!currentThumbnails.includes(`${thumbnailName}.jpg`)) {
     console.log('did not find thumbnail:', thumbnailName);
-    return downloadThumbnail(thumbnailPath, thumbUrl);
+    return await downloadThumbnail(thumbnailPath, thumbUrl);
   }
   return Promise.resolve();
 }

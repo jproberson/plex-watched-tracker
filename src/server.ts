@@ -1,16 +1,18 @@
-import express, { json, urlencoded, static as serveStatic, Request, Response, NextFunction } from 'express';
-import { join, dirname } from 'path';
+import express, { json, Request, Response, static as serveStatic, urlencoded } from 'express';
+import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { saveShowOrder, getTierList } from './controllers/plexController.js';
-import { plexServerIp, plexServerPort, plexToken, dataDir, port } from './server-config.js';
+import { getTierList, saveShowOrder } from './controllers/plexController.js';
+import { dataDir, plexServerIp, plexServerPort, plexToken, port } from './server-config.js';
 import axios from 'axios';
+import apicache from 'apicache';
 
 dotenv.config();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
+const cache = apicache.middleware;
 
 app.set('view engine', 'ejs');
 app.set('views', join(__dirname, 'views'));
@@ -19,7 +21,8 @@ app.use(json());
 app.use(urlencoded({ extended: false }));
 app.use(serveStatic(join(__dirname, 'public')));
 
-app.use('/thumbnails', serveStatic(join(dataDir, 'thumbnails')));
+app.use('/thumbnails', serveStatic(join(dataDir, 'thumbnails'), { maxAge: '30d' }));
+app.use('/public', serveStatic(join(__dirname, 'public'), { maxAge: '30d' }));
 
 app.get('/images/*', async (req: Request, res: Response) => {
   try {
@@ -40,9 +43,9 @@ app.get('/images/*', async (req: Request, res: Response) => {
 
 app.post('/save-order', saveShowOrder);
 
-app.get('/', getTierList);
+app.get('/', cache('10 minutes'), getTierList);
 
-app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
+app.use((err: unknown, req: Request, res: Response) => {
   if (err instanceof Error) {
     console.error(err.stack);
     res.status(500).send('Something broke!');
@@ -51,7 +54,6 @@ app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
     res.status(500).send('Unknown error');
   }
 });
-
 
 app.listen(port, () => {
   console.log(`Plex watched tracker running at http://localhost:${port}`);

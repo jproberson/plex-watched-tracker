@@ -37,6 +37,7 @@ export const getTierList = async (req: Request, res: Response, next: NextFunctio
     res.render('tier-list', {
       watchedShows,
       ADMIN_TOKEN: process.env.ADMIN_TOKEN,
+      cache: true
     });
   } catch (error) {
     next(error);
