@@ -15,7 +15,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "apicache": "^1.6.3",
     "axios": "^1.7.2",
     "dotenv": "^16.4.5",
     "dragula": "^3.7.3",

@@ -5,14 +5,12 @@ import dotenv from 'dotenv';
 import { getTierList, saveShowOrder } from './controllers/plexController.js';
 import { dataDir, plexServerIp, plexServerPort, plexToken, port } from './server-config.js';
 import axios from 'axios';
-import apicache from 'apicache';
 
 dotenv.config();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
-const cache = apicache.middleware;
 
 app.set('view engine', 'ejs');
 app.set('views', join(__dirname, 'views'));
@@ -21,8 +19,8 @@ app.use(json());
 app.use(urlencoded({ extended: false }));
 app.use(serveStatic(join(__dirname, 'public')));
 
-app.use('/thumbnails', serveStatic(join(dataDir, 'thumbnails'), { maxAge: '30d' }));
-app.use('/public', serveStatic(join(__dirname, 'public'), { maxAge: '30d' }));
+app.use('/thumbnails', serveStatic(join(dataDir, 'thumbnails')));
+app.use('/public', serveStatic(join(__dirname, 'public')));
 
 app.get('/images/*', async (req: Request, res: Response) => {
   try {
@@ -43,7 +41,7 @@ app.get('/images/*', async (req: Request, res: Response) => {
 
 app.post('/save-order', saveShowOrder);
 
-app.get('/', cache('10 minutes'), getTierList);
+app.get('/', getTierList);
 
 app.use((err: unknown, req: Request, res: Response) => {
   if (err instanceof Error) {
