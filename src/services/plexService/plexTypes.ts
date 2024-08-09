@@ -110,8 +110,6 @@ export interface ShowMetaData {
 
 export interface ShowTrackerData {
   title: string;
-  genres: string[];
-  country: string;
   thumb: string;
   numberOrder?: number,
   letterOrder?: string

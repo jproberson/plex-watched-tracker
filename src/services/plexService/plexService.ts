@@ -1,6 +1,5 @@
 import {
   areAllEpisodesWatched,
-  extractGenresAndCountries,
   getShowSections,
   loadSavedShows,
   loadUserShowOverrides,
@@ -57,7 +56,6 @@ async function fetchPlexShows(): Promise<ShowTrackerData[]> {
 
       if (await areAllEpisodesWatched(showMetaData)) {
         const showData = showMetaData.MediaContainer;
-        const { genres, countries } = extractGenresAndCountries(showMetaData);
         const showThumb = showData.thumb;
 
         const thumbnailUrl = `http://localhost:42069/images${showThumb}?X-Plex-Token=${plexToken}`;
@@ -66,8 +64,6 @@ async function fetchPlexShows(): Promise<ShowTrackerData[]> {
         watchedShows.push({
           title: showData.parentTitle,
           thumb: `${thumbnailName}.jpg`,
-          genres,
-          country: countries.join(', '),
         });
         await validateAndSaveThumbnail(currentThumbnails, thumbnailName, thumbnailUrl, thumbnailsFilePath);
       }

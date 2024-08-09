@@ -60,18 +60,6 @@ export async function areAllEpisodesWatched(plexSectionData: PlexSectionData): P
   return true;
 }
 
-export function extractGenresAndCountries(showData: ShowMetaData) {
-  const genres: string[] = [];
-  const countries: string[] = [];
-  if (showData.Genre) {
-    showData.Genre.forEach((g) => genres.push(g.tag));
-  }
-  if (showData.Country) {
-    showData.Country.forEach((c) => countries.push(c.tag));
-  }
-  return { genres, countries };
-}
-
 export function loadUserShowOverrides(): ShowTrackerData[] {
   return loadFile(userShowOverrides);
 }
@@ -98,6 +86,7 @@ export function mergeShows(
       if (existingShow.thumb !== show.thumb) {
         existingShow.thumb = show.thumb;
       }
+      showsMap.set(existingShow.title, existingShow);
     } else {
       showsMap.set(show.title, show);
     }
@@ -110,8 +99,12 @@ export function mergeShows(
       if (existingShow.thumb !== show.thumb) {
         existingShow.thumb = show.thumb;
       }
+      showsMap.set(existingShow.title, existingShow);
+    } else {
+      showsMap.set(show.title, show);
+
     }
-    showsMap.set(show.title, show);
+
   });
 
   return Array.from(showsMap.values());

@@ -29,8 +29,6 @@ If you have ran the app already there should be a directory thumbnails, if not t
 [
   {
     "title": "Show Title",
-    "genres": ["Genre1", "Genre2"],
-    "countries": "Country",
     "thumb": "show_thumbnail.jpg"
   },
 ]
