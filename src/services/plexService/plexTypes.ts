@@ -1,21 +1,37 @@
 export interface PlexDirectory {
   key: string;
   title: string;
-  type: string;
-
   [key: string]: unknown;
 }
 
 export interface PlexMediaContainer {
   size: number;
   allowSync: boolean;
+  art: string;
+  identifier: string;
+  key: string;
+  librarySectionID: number;
+  librarySectionTitle: string;
+  librarySectionUUID: string;
+  mediaTagPrefix: string;
+  mediaTagVersion: number;
+  nocache: boolean;
+  parentIndex: number;
+  parentTitle: string;
+  parentYear: number;
+  summary: string;
+  thumb: string;
   title1: string;
+  title2: string;
+  viewGroup: string;
+  Metadata: ShowMetaData[];
   Directory: PlexDirectory[];
 }
 
 export interface PlexSectionsResponse {
   MediaContainer: PlexMediaContainer;
 }
+
 
 export interface PlexSectionData {
   MediaContainer: {

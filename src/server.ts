@@ -1,4 +1,4 @@
-import express, { json, Request, Response, static as serveStatic, urlencoded } from 'express';
+import express, { json, NextFunction, Request, Response, static as serveStatic, urlencoded } from 'express';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -43,7 +43,8 @@ app.post('/save-order', saveShowOrder);
 
 app.get('/', getTierList);
 
-app.use((err: unknown, req: Request, res: Response) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof Error) {
     console.error(err.stack);
     res.status(500).send('Something broke!');

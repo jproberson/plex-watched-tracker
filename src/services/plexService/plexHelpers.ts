@@ -1,4 +1,4 @@
-import { loadFile, loadOrCreateFile  } from '../../utils/fileUtils.js';
+import { loadFile, loadOrCreateFile } from '../../utils/fileUtils.js';
 import {
   PlexSections,
   PlexDirectory,
@@ -80,24 +80,39 @@ export function loadSavedShows(): ShowTrackerData[] {
   return loadOrCreateFile(savedShowsFilePath);
 }
 
-export function mergeShows(preloadedShows: ShowTrackerData[], fetchedShows: ShowTrackerData[], userOverrides: ShowTrackerData[]): ShowTrackerData[] {
-  const showsMap = new Map(preloadedShows.map(show => [show.title, show]));
+export function mergeShows(
+  preloadedShows: ShowTrackerData[],
+  fetchedShows: ShowTrackerData[],
+  userOverrides: ShowTrackerData[],
+): ShowTrackerData[] {
+  const showsMap = new Map<string, ShowTrackerData>();
 
-  fetchedShows.forEach(show => {
-    if (!showsMap.has(show.title)) {
-      showsMap.set(show.title, show);
-    }
+  preloadedShows.forEach(show => {
+    showsMap.set(show.title, show);
   });
 
-  userOverrides.forEach(show => {
-    if (!showsMap.has(show.title)) {
+  fetchedShows.forEach(show => {
+    const existingShow = showsMap.get(show.title);
+
+    if (existingShow) {
+      if (existingShow.thumb !== show.thumb) {
+        existingShow.thumb = show.thumb;
+      }
+    } else {
       showsMap.set(show.title, show);
     }
+
+  });
+  userOverrides.forEach(show => {
+
+    const existingShow = showsMap.get(show.title);
+    if (existingShow) {
+      if (existingShow.thumb !== show.thumb) {
+        existingShow.thumb = show.thumb;
+      }
+    }
+    showsMap.set(show.title, show);
   });
 
   return Array.from(showsMap.values());
-}
-
-export function formatThumbnailNameFromPlexTitle(title: string): string {
-  return title.replace(/\s/g, '_').toLowerCase();
 }

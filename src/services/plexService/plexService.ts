@@ -9,7 +9,7 @@ import {
   thumbnailsFilePath,
   validateShowData,
 } from './plexHelpers.js';
-import { ShowTrackerData } from './plexTypes.js';
+import { PlexSectionsResponse, ShowTrackerData } from './plexTypes.js';
 import { fetchSectionData, fetchSections, fetchShowData } from '../plexApiService.js';
 import {
   ensureDirectoryExists,
@@ -47,22 +47,24 @@ async function fetchPlexShows(): Promise<ShowTrackerData[]> {
   ensureDirectoryExists(thumbnailsFilePath);
 
   for (const section of showSections) {
-    const sectionData = await fetchSectionData(section.key);
+    const sectionData: PlexSectionsResponse = await fetchSectionData(section.key);
     if (!sectionData) continue;
 
     for (const show of sectionData.MediaContainer.Metadata || []) {
       const showData = validateShowData(show);
       if (!showData) continue;
-
       const showMetaData = await fetchShowData(showData.key);
+
       if (await areAllEpisodesWatched(showMetaData)) {
-        const { genres, countries } = extractGenresAndCountries(showData);
+        const showData = showMetaData.MediaContainer;
+        const { genres, countries } = extractGenresAndCountries(showMetaData);
         const showThumb = showData.thumb;
+
         const thumbnailUrl = `http://localhost:42069/images${showThumb}?X-Plex-Token=${plexToken}`;
-        const thumbnailName = showThumb.split('/').pop() || '';
+        const thumbnailName = `${showThumb.split('/')[3]}-${showThumb.split('/').pop()}`;
 
         watchedShows.push({
-          title: showData.title,
+          title: showData.parentTitle,
           thumb: `${thumbnailName}.jpg`,
           genres,
           country: countries.join(', '),
